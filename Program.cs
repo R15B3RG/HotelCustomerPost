@@ -5,7 +5,7 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://0.0.0.0:4951");
+builder.WebHost.UseUrls("http://0.0.0.0:6951");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -19,7 +19,7 @@ builder.Services
             "Customer",
             policy =>
                 policy
-                    .WithOrigins("https://localhost:7151", "https://localhost:7173")
+                    .WithOrigins("https://localhost:7777")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials()
@@ -32,6 +32,14 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("Customer");
+
+app.MapMethods("/customers", new[] { "OPTIONS" }, (HttpContext context) =>
+{
+    context.Response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:7777");
+    context.Response.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
+    context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+    return Results.Ok();
+});
 
 // Endpoint för pots
 app.MapPost("/customers", async (Customer customer, RabbitMqService rabbitMqService) =>
